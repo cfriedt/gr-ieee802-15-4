@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <ieee802-15-4/rime_stack.h>
+#include <ieee802154/rime_stack.h>
 #include "rime_connection.h"
 #include "bc_connection.h"
 #include "uc_connection.h"
@@ -24,7 +24,7 @@
 #include <gnuradio/block_detail.h>
 #include <string>
 
-using namespace gr::ieee802_15_4;
+using namespace gr::ieee802154;
 
 class rime_stack_impl : public rime_stack {
 

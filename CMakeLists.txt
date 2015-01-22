@@ -18,7 +18,7 @@
 # Project setup
 ########################################################################
 cmake_minimum_required(VERSION 2.6)
-project(gr-ieee802-15-4 CXX C)
+project(gr-ieee802154 CXX C)
 enable_testing()
 
 #select the release build type by default to get optimization flags
@@ -58,7 +58,7 @@ set(Boost_ADDITIONAL_VERSIONS
 find_package(Boost "1.35" COMPONENTS filesystem system thread)
 
 if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Boost required to compile ieee802-15-4")
+    message(FATAL_ERROR "Boost required to compile ieee802154")
 endif()
 
 ########################################################################
@@ -67,7 +67,7 @@ endif()
 include(GrPlatform) #define LIB_SUFFIX
 set(GR_RUNTIME_DIR      bin)
 set(GR_LIBRARY_DIR      lib${LIB_SUFFIX})
-set(GR_INCLUDE_DIR      include/ieee802-15-4)
+set(GR_INCLUDE_DIR      include/ieee802154)
 set(GR_DATA_DIR         share)
 set(GR_PKG_DATA_DIR     ${GR_DATA_DIR}/${CMAKE_PROJECT_NAME})
 set(GR_DOC_DIR          ${GR_DATA_DIR}/doc)
@@ -87,15 +87,15 @@ find_package(CppUnit)
 find_package(PythonLibs 2)
 
 if(NOT GNURADIO_RUNTIME_FOUND)
-    message(FATAL_ERROR "GnuRadio Runtime required to compile ieee802-15-4")
+    message(FATAL_ERROR "GnuRadio Runtime required to compile ieee802154")
 endif()
 
 if(NOT CPPUNIT_FOUND)
-    message(FATAL_ERROR "CppUnit required to compile ieee802-15-4")
+    message(FATAL_ERROR "CppUnit required to compile ieee802154")
 endif()
 
 if(NOT PYTHONLIBS_FOUND)
-    message(FATAL_ERROR "Python required to compile ieee802-15-4")
+    message(FATAL_ERROR "Python required to compile ieee802154")
 endif()
 
 ########################################################################
@@ -134,8 +134,8 @@ link_directories(
     ${GNURADIO_RUNTIME_LIBRARY_DIRS}
 )
 
-set(GR_IEEE802_15_4_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
-set(GR_IEEE802_15_4_SWIG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/swig CACHE INTERNAL "" FORCE)
+set(GR_IEEE802154_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
+set(GR_IEEE802154_SWIG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/swig CACHE INTERNAL "" FORCE)
 
 ########################################################################
 # Create uninstall target
@@ -152,7 +152,7 @@ add_custom_target(uninstall
 ########################################################################
 # Add subdirectories
 ########################################################################
-add_subdirectory(include/ieee802-15-4)
+add_subdirectory(include/ieee802154)
 add_subdirectory(lib)
 add_subdirectory(swig)
 add_subdirectory(python)

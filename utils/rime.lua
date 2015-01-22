@@ -35,6 +35,6 @@ end
 -- get wiretap table
 table = DissectorTable.get("wtap_encap")
 -- and add rime protocol
-table:add(wtap["IEEE802_15_4"], rime_proto)
+table:add(wtap["IEEE802154"], rime_proto)
 
 

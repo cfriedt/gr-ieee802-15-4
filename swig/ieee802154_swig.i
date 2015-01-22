@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Bastian Bloessl <bloessl@ccs-labs.org>
+ * Copyright 2013 Free Software Foundation, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,25 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INCLUDED_GR_IEEE802_15_4_ACCESS_CODE_PREFIXER_H
-#define INCLUDED_GR_IEEE802_15_4_ACCESS_CODE_PREFIXER_H
+#define GR_IEEE802154_API
 
-#include <ieee802-15-4/api.h>
-#include <gnuradio/block.h>
+%include <gnuradio.i>
 
-namespace gr {
-namespace ieee802_15_4 {
+%include "ieee802154_swig_doc.i"
 
-class GR_IEEE802_15_4_API access_code_prefixer : virtual public gr::block
-{
-public:
+%{
+#include "ieee802154/access_code_prefixer.h"
+#include "ieee802154/mac.h"
+#include "ieee802154/packet_sink.h"
+#include "ieee802154/rime_stack.h"
+%}
 
-	typedef boost::shared_ptr<access_code_prefixer> sptr;
-	static sptr make();
+%include "ieee802154/access_code_prefixer.h"
+%include "ieee802154/mac.h"
+%include "ieee802154/packet_sink.h"
+%include "ieee802154/rime_stack.h"
 
-};
 
-}  // namespace ieee802_15_4
-}  // namespace gr
-
-#endif /* INCLUDED_GR_IEEE802_15_4_ACCESS_CODE_PREFIXER_H */
+GR_SWIG_BLOCK_MAGIC2(ieee802154, access_code_prefixer);
+GR_SWIG_BLOCK_MAGIC2(ieee802154, mac);
+GR_SWIG_BLOCK_MAGIC2(ieee802154, packet_sink);
+GR_SWIG_BLOCK_MAGIC2(ieee802154, rime_stack);

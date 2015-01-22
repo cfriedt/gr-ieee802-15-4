@@ -16,7 +16,7 @@
  */
 #include "rime_connection.h" 
 
-using namespace gr::ieee802_15_4;
+using namespace gr::ieee802154;
 
 rime_connection::rime_connection(rime_stack *block, uint16_t channel, 
 								pmt::pmt_t inport, pmt::pmt_t outport, 

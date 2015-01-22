@@ -19,7 +19,7 @@
 #####################################################################
 include(GrPlatform) #define LIB_SUFFIX
 
-list(APPEND gr_ieee802_15_4_sources
+list(APPEND gr_ieee802154_sources
     access_code_prefixer.cc
     bc_connection.cc
     mac.cc
@@ -31,19 +31,19 @@ list(APPEND gr_ieee802_15_4_sources
     uc_connection.cc
 )
 
-list(APPEND gr_ieee802_15_4_libs
+list(APPEND gr_ieee802154_libs
     ${Boost_LIBRARIES}
     ${GNURADIO_ALL_LIBRARIES}
 )
 
-add_library(gnuradio-ieee802_15_4 SHARED ${gr_ieee802_15_4_sources})
-target_link_libraries(gnuradio-ieee802_15_4 ${gr_ieee802_15_4_libs})
-set_target_properties(gnuradio-ieee802_15_4 PROPERTIES DEFINE_SYMBOL "gnuradio_ieee802_15_4_EXPORTS")
+add_library(gnuradio-ieee802154 SHARED ${gr_ieee802154_sources})
+target_link_libraries(gnuradio-ieee802154 ${gr_ieee802154_libs})
+set_target_properties(gnuradio-ieee802154 PROPERTIES DEFINE_SYMBOL "gnuradio_ieee802154_EXPORTS")
 
 #####################################################################
 # Install built library files
 #####################################################################
-install(TARGETS gnuradio-ieee802_15_4
+install(TARGETS gnuradio-ieee802154
     LIBRARY DESTINATION lib${LIB_SUFFIX} # .so/.dylib file
     ARCHIVE DESTINATION lib${LIB_SUFFIX} # .lib file
     RUNTIME DESTINATION bin              # .dll file

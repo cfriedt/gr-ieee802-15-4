@@ -32,8 +32,8 @@ You can find the firmware that I used to test interoperability with TelosB motes
 
 ### Installation
 
-git clone git://github.com/bastibl/gr-ieee802-15-4.git
-cd gr-ieee802-15-4
+git clone git://github.com/bastibl/gr-ieee802154.git
+cd gr-ieee802154
 mkdir build
 cd build
 cmake ..
@@ -42,7 +42,7 @@ sudo make install
 sudo ldconfig
 
 The  hierarchical block has to be installed separately:
-Open examples/ieee802_15_4_PHY.grc in gnuradio-companion and generate (hotkey F5) the flow graph. This installs the hierarchical block in your home, where gnuradio-companion can find it (typically ~/.grc_gnuradio).
+Open examples/ieee802154_PHY.grc in gnuradio-companion and generate (hotkey F5) the flow graph. This installs the hierarchical block in your home, where gnuradio-companion can find it (typically ~/.grc_gnuradio).
 
 
 ### Usage

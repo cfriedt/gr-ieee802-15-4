@@ -28,8 +28,8 @@ list(APPEND python_sources
 
 GR_PYTHON_INSTALL(
     FILES ${python_sources}
-    DESTINATION ${GR_PYTHON_DIR}/ieee802_15_4
-    COMPONENT "ieee802_15_4_python"
+    DESTINATION ${GR_PYTHON_DIR}/ieee802154
+    COMPONENT "ieee802154_python"
 )
 
 #####################################################################
@@ -37,6 +37,6 @@ GR_PYTHON_INSTALL(
 #####################################################################
 include(GrTest)
 
-#set(GR_TEST_TARGET_DEPS gnuradio-ieee802-15-4)
+#set(GR_TEST_TARGET_DEPS gnuradio-ieee802154)
 #set(GR_TEST_PYTHON_DIRS ${CMAKE_BINARY_DIR}/swig)
 #GR_ADD_TEST(qa_howto ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_howto.py)

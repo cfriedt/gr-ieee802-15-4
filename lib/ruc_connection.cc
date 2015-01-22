@@ -23,7 +23,7 @@
 #define dout DEBUG && std::cout
 
 
-using namespace gr::ieee802_15_4;
+using namespace gr::ieee802154;
 
 ruc_connection::ruc_connection(rime_stack* block, uint16_t channel, 
 							   pmt::pmt_t inport, pmt::pmt_t outport, 
