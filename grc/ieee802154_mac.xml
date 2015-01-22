@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <block>
 	<name>IEEE802.15.4 MAC</name>
-	<key>ieee802_15_4_mac</key>
+	<key>ieee802154_mac</key>
 	<category>IEEE802.15.4</category>
-	<import>import ieee802_15_4</import>
-	<make>ieee802_15_4.mac($debug)</make>
+	<import>import ieee802154</import>
+	<make>ieee802154.mac($debug)</make>
 
 	<param>
 		<name>Debug</name>

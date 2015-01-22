@@ -1692,10 +1692,10 @@
     </param>
   </block>
   <block>
-    <key>ieee802_15_4_rime_stack</key>
+    <key>ieee802154_rime_stack</key>
     <param>
       <key>id</key>
-      <value>ieee802_15_4_rime_stack_0</value>
+      <value>ieee802154_rime_stack_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -1782,10 +1782,10 @@
     </param>
   </block>
   <block>
-    <key>ieee802_15_4_phy</key>
+    <key>ieee802154_phy</key>
     <param>
       <key>id</key>
-      <value>ieee802_15_4_phy_0</value>
+      <value>ieee802154_phy_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -1852,10 +1852,10 @@
     </param>
   </block>
   <block>
-    <key>ieee802_15_4_mac</key>
+    <key>ieee802154_mac</key>
     <param>
       <key>id</key>
-      <value>ieee802_15_4_mac_0</value>
+      <value>ieee802154_mac_0</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -1888,12 +1888,12 @@
   </block>
   <connection>
     <source_block_id>uhd_usrp_source_0</source_block_id>
-    <sink_block_id>ieee802_15_4_phy_0</sink_block_id>
+    <sink_block_id>ieee802154_phy_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_phy_0</source_block_id>
+    <source_block_id>ieee802154_phy_0</source_block_id>
     <sink_block_id>uhd_usrp_sink_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
@@ -1905,67 +1905,67 @@
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_phy_0</source_block_id>
+    <source_block_id>ieee802154_phy_0</source_block_id>
     <sink_block_id>foo_packet_pad_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>foo_packet_pad_0</source_block_id>
-    <sink_block_id>ieee802_15_4_phy_0</sink_block_id>
+    <sink_block_id>ieee802154_phy_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_mac_0</source_block_id>
-    <sink_block_id>ieee802_15_4_phy_0</sink_block_id>
+    <source_block_id>ieee802154_mac_0</source_block_id>
+    <sink_block_id>ieee802154_phy_0</sink_block_id>
     <source_key>pdu out</source_key>
     <sink_key>txin</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_phy_0</source_block_id>
-    <sink_block_id>ieee802_15_4_mac_0</sink_block_id>
+    <source_block_id>ieee802154_phy_0</source_block_id>
+    <sink_block_id>ieee802154_mac_0</sink_block_id>
     <source_key>rxout</source_key>
     <sink_key>pdu in</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_rime_stack_0</source_block_id>
-    <sink_block_id>ieee802_15_4_mac_0</sink_block_id>
+    <source_block_id>ieee802154_rime_stack_0</source_block_id>
+    <sink_block_id>ieee802154_mac_0</sink_block_id>
     <source_key>toMAC</source_key>
     <sink_key>app in</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_mac_0</source_block_id>
-    <sink_block_id>ieee802_15_4_rime_stack_0</sink_block_id>
+    <source_block_id>ieee802154_mac_0</source_block_id>
+    <sink_block_id>ieee802154_rime_stack_0</sink_block_id>
     <source_key>app out</source_key>
     <sink_key>fromMAC</sink_key>
   </connection>
   <connection>
     <source_block_id>blocks_socket_pdu_0_0</source_block_id>
-    <sink_block_id>ieee802_15_4_rime_stack_0</sink_block_id>
+    <sink_block_id>ieee802154_rime_stack_0</sink_block_id>
     <source_key>pdus</source_key>
     <sink_key>bcin</sink_key>
   </connection>
   <connection>
     <source_block_id>blocks_message_strobe_0</source_block_id>
-    <sink_block_id>ieee802_15_4_rime_stack_0</sink_block_id>
+    <sink_block_id>ieee802154_rime_stack_0</sink_block_id>
     <source_key>strobe</source_key>
     <sink_key>bcin</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_rime_stack_0</source_block_id>
+    <source_block_id>ieee802154_rime_stack_0</source_block_id>
     <sink_block_id>blocks_socket_pdu_0_0</sink_block_id>
     <source_key>bcout</source_key>
     <sink_key>pdus</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_phy_0</source_block_id>
+    <source_block_id>ieee802154_phy_0</source_block_id>
     <sink_block_id>foo_wireshark_connector_0</sink_block_id>
     <source_key>rxout</source_key>
     <sink_key>in</sink_key>
   </connection>
   <connection>
-    <source_block_id>ieee802_15_4_mac_0</source_block_id>
+    <source_block_id>ieee802154_mac_0</source_block_id>
     <sink_block_id>foo_wireshark_connector_0</sink_block_id>
     <source_key>pdu out</source_key>
     <sink_key>in</sink_key>

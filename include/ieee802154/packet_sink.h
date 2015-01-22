@@ -14,16 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INCLUDED_GR_IEEE802_15_4_PACKET_SINK_H
-#define INCLUDED_GR_IEEE802_15_4_PACKET_SINK_H
+#ifndef INCLUDED_GR_IEEE802154_PACKET_SINK_H
+#define INCLUDED_GR_IEEE802154_PACKET_SINK_H
 
-#include <ieee802-15-4/api.h>
+#include <ieee802154/api.h>
 #include <gnuradio/block.h>
 
 namespace gr {
-namespace ieee802_15_4 {
+namespace ieee802154 {
 
-class GR_IEEE802_15_4_API packet_sink : virtual public block
+class GR_IEEE802154_API packet_sink : virtual public block
 {
 public:
 
@@ -32,7 +32,7 @@ public:
 
 };
 
-}  // namespace ieee802_15_4
+}  // namespace ieee802154
 }  // namespace gr
 
-#endif /* INCLUDED_GR_IEEE802_15_4_PACKET_SINK_H */
+#endif /* INCLUDED_GR_IEEE802154_PACKET_SINK_H */

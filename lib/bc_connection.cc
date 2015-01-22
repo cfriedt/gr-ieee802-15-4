@@ -16,7 +16,7 @@
  */
 #include "bc_connection.h"
 
-using namespace gr::ieee802_15_4;
+using namespace gr::ieee802154;
 
 bc_connection::bc_connection(rime_stack *block, uint16_t channel, pmt::pmt_t inport,
 							pmt::pmt_t outport, const uint8_t rime_add_mine[2])

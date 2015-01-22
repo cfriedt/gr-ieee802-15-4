@@ -24,7 +24,7 @@
 #define dout std::cout
 #endif
 
-using namespace gr::ieee802_15_4;
+using namespace gr::ieee802154;
 
 stubborn_sender::stubborn_sender(rime_stack* block, ruc_connection *caller,
 								 pmt::pmt_t outport) 

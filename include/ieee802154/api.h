@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Free Software Foundation, Inc.
+ * Copyright (C) 2013 Bastian Bloessl <bloessl@ccs-labs.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,26 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define GR_IEEE802_15_4_API
+#ifndef INCLUDED_GR_IEEE802154_API_H
+#define INCLUDED_GR_IEEE802154_API_H
 
-%include <gnuradio.i>
+#include <gnuradio/attributes.h>
 
-%include "ieee802_15_4_swig_doc.i"
+#ifdef gnuradio_ieee802154_EXPORTS
+#  define GR_IEEE802154_API __GR_ATTR_EXPORT
+#else
+#  define GR_IEEE802154_API __GR_ATTR_IMPORT
+#endif
 
-%{
-#include "ieee802-15-4/access_code_prefixer.h"
-#include "ieee802-15-4/mac.h"
-#include "ieee802-15-4/packet_sink.h"
-#include "ieee802-15-4/rime_stack.h"
-%}
-
-%include "ieee802-15-4/access_code_prefixer.h"
-%include "ieee802-15-4/mac.h"
-%include "ieee802-15-4/packet_sink.h"
-%include "ieee802-15-4/rime_stack.h"
-
-
-GR_SWIG_BLOCK_MAGIC2(ieee802_15_4, access_code_prefixer);
-GR_SWIG_BLOCK_MAGIC2(ieee802_15_4, mac);
-GR_SWIG_BLOCK_MAGIC2(ieee802_15_4, packet_sink);
-GR_SWIG_BLOCK_MAGIC2(ieee802_15_4, rime_stack);
+#endif /* INCLUDED_GR_IEEE802154_API_H */

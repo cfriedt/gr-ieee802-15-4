@@ -2,10 +2,10 @@
 
 <block>
 	<name>Access Code Prefixer</name>
-	<key>ieee802_15_4_access_code_prefixer</key>
+	<key>ieee802154_access_code_prefixer</key>
 	<category>IEEE802.15.4</category>
-	<import>import ieee802_15_4</import>
-	<make>ieee802_15_4.access_code_prefixer()</make>
+	<import>import ieee802154</import>
+	<make>ieee802154.access_code_prefixer()</make>
 
 	<sink>
 		<name>in</name>

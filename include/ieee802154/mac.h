@@ -14,15 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INCLUDED_GR_IEEE802_15_4_API_H
-#define INCLUDED_GR_IEEE802_15_4_API_H
+#ifndef INCLUDED_GR_IEEE802154_MAC_H
+#define INCLUDED_GR_IEEE802154_MAC_H
 
-#include <gnuradio/attributes.h>
+#include <ieee802154/api.h>
+#include <gnuradio/block.h>
 
-#ifdef gnuradio_ieee802_15_4_EXPORTS
-#  define GR_IEEE802_15_4_API __GR_ATTR_EXPORT
-#else
-#  define GR_IEEE802_15_4_API __GR_ATTR_IMPORT
-#endif
+namespace gr {
+namespace ieee802154 {
 
-#endif /* INCLUDED_GR_IEEE802_15_4_API_H */
+class GR_IEEE802154_API mac: virtual public block
+{
+public:
+	
+	typedef boost::shared_ptr<mac> sptr;
+	static sptr make(bool debug= false);
+};
+
+}  // namespace ieee802_11
+}  // namespace gr
+
+#endif /* INCLUDED_GR_IEEE802154_MAC_H */
