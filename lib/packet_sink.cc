@@ -41,22 +41,23 @@ using namespace gr::ieee802154;
 // See "CMOS RFIC Architectures for IEEE 802.15.4 Networks",
 // John Notor, Anthony Caviglia, Gary Levy, for more details.
 static const unsigned int CHIP_MAPPING[] = {
-					1618456172,
-					1309113062,
-					1826650030,
-					1724778362,
-					778887287,
-					2061946375,
-					2007919840,
-					125494990,
-					529027475,
-					838370585,
-					320833617,
-					422705285,
-					1368596360,
-					85537272,
-					139563807,
-					2021988657};
+	0x744ac39b,
+	0x44ac39b7,
+	0x4ac39b74,
+	0xac39b744,
+	0xc39b744a,
+	0x39b744ac,
+	0x9b744ac3,
+	0xb744ac39,
+	0xdee06931,
+	0xee06931d,
+	0xe06931de,
+	0x06931dee,
+	0x6931dee0,
+	0x931dee06,
+	0x31dee069,
+	0x1dee0693,
+};
 
 static const int MAX_PKT_LEN    = 128 -  1; // remove header and CRC
 static const int MAX_LQI_SAMPLES = 8; // Number of chip correlation samples to take
@@ -186,9 +187,9 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 			while (count < ninput) {
 
 				if(slice(inbuf[count++]))
-					d_shift_reg = (d_shift_reg << 1) | 1;
+					d_shift_reg = (1 << 31) | (d_shift_reg >> 1);
 				else
-					d_shift_reg = d_shift_reg << 1;
+					d_shift_reg = d_shift_reg >> 1;
 
 				if(d_preamble_cnt > 0){
 					d_chip_cnt = d_chip_cnt+1;
@@ -259,9 +260,9 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 
 			while (count < ninput) {		// Decode the bytes one after another.
 				if(slice(inbuf[count++]))
-					d_shift_reg = (d_shift_reg << 1) | 1;
+					d_shift_reg = (1<<31) | (d_shift_reg >> 1);
 				else
-					d_shift_reg = d_shift_reg << 1;
+					d_shift_reg = d_shift_reg >> 1;
 
 				d_chip_cnt = d_chip_cnt+1;
 
@@ -304,9 +305,9 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 
 			while (count < ninput) {   // shift bits into bytes of packet one at a time
 				if(slice(inbuf[count++]))
-					d_shift_reg = (d_shift_reg << 1) | 1;
+					d_shift_reg = (1<<31) | (d_shift_reg >> 1);
 				else
-					d_shift_reg = d_shift_reg << 1;
+					d_shift_reg = d_shift_reg >> 1;
 
 				d_chip_cnt = (d_chip_cnt+1)%32;
 
