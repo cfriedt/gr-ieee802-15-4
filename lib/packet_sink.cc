@@ -28,10 +28,38 @@
 
 using namespace gr::ieee802154;
 
+#include <sys/time.h>
+static uint64_t now;
+static inline uint64_t stamp() {
+	struct timeval tv = {};
+	gettimeofday( &tv, NULL );
+	return tv.tv_sec;
+}
+
+#define V_( then, fmt, args... ) \
+	do { \
+		now = stamp(); \
+		if ( now - then >= 1 ) { \
+			then = now; \
+			fprintf( stderr, "%d: " fmt "\n", __LINE__, ##args ); \
+		} \
+	} while( 0 )
+
 // very verbose output for almost each sample
-#define VERBOSE 0
+#if 0
+static uint64_t v1_then;
+#define V( fmt, args... ) V_( v1_then, fmt, ##args )
+#else
+#define V( fmt, args... )
+#endif
 // less verbose output for higher level debugging
-#define VERBOSE2 0
+#if 1
+static uint64_t v2_then;
+#define V2( fmt, args... ) V_( v2_then, fmt, ##args )
+#else
+#define V2( fmt, args... )
+#endif
+
 
 // this is the mapping between chips and symbols if we do
 // a fm demodulation of the O-QPSK signal. Note that this
@@ -67,8 +95,7 @@ public:
 
 void enter_search()
 {
-	if (VERBOSE)
-		fprintf(stderr, "@ enter_search\n");
+	V("@ enter_search");
 
 	d_state = STATE_SYNC_SEARCH;
 	d_shift_reg = 0;
@@ -79,8 +106,7 @@ void enter_search()
     
 void enter_have_sync()
 {
-	if (VERBOSE)
-		fprintf(stderr, "@ enter_have_sync\n");
+	V("@ enter_have_sync");
 
 	d_state = STATE_HAVE_SYNC;
 	d_packetlen_cnt = 0;
@@ -94,8 +120,7 @@ void enter_have_sync()
 
 void enter_have_header(int payload_len)
 {
-	if (VERBOSE)
-		fprintf(stderr, "@ enter_have_header (payload_len = %d)\n", payload_len);
+	V("@ enter_have_header (payload_len = %d)", payload_len);
 
 	d_state = STATE_HAVE_HEADER;
 	d_packetlen  = payload_len;
@@ -122,8 +147,7 @@ unsigned char decode_chips(unsigned int chips){
 	}
 
 	if (min_threshold < d_threshold) {
-		if (VERBOSE)
-			fprintf(stderr, "Found sequence with %d errors at 0x%x\n", min_threshold, (chips & 0x7FFFFFFE) ^ (CHIP_MAPPING[best_match] & 0x7FFFFFFE)), fflush(stderr);
+		V2("Found sequence with %d errors at 0x%x", min_threshold, (chips & 0x7FFFFFFE) ^ (CHIP_MAPPING[best_match] & 0x7FFFFFFE));
 		// LQI: Average number of chips correct * MAX_LQI_SAMPLES
 		//
 		if (d_lqi_sample_count < MAX_LQI_SAMPLES) {
@@ -153,8 +177,7 @@ packet_sink_impl(int threshold)
 	d_lqi = 0;
 	d_lqi_sample_count = 0;
 
-	if ( VERBOSE )
-		fprintf(stderr, "syncvec: %x, threshold: %d\n", d_sync_vector, d_threshold),fflush(stderr);
+	V("syncvec: %x, threshold: %d", d_sync_vector, d_threshold);
 	enter_search();
 
 	message_port_register_out(pmt::mp("out"));
@@ -174,15 +197,13 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 	int count=0;
 	int i = 0;
 
-	if (VERBOSE)
-		fprintf(stderr,">>> Entering state machine\n"),fflush(stderr);
+	V(">>> Entering state machine");
 
 	while(count < ninput) {
 		switch(d_state) {
 
 		case STATE_SYNC_SEARCH:    // Look for sync vector
-			if (VERBOSE)
-				fprintf(stderr,"SYNC Search, ninput=%d syncvec=%x\n", ninput, d_sync_vector),fflush(stderr);
+			V("SYNC Search, ninput=%d syncvec=%x", ninput, d_sync_vector);
 
 			while (count < ninput) {
 
@@ -200,13 +221,12 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 					unsigned int threshold;
 					threshold = gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[0] & 0x7FFFFFFE));
 					if(threshold < d_threshold) {
-						//  fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
+						//  fprintf(stderr, "Threshold %d d_preamble_cnt: %d", threshold, d_preamble_cnt);
 						//if ((d_shift_reg&0xFFFFFE) == (CHIP_MAPPING[0]&0xFFFFFE)) {
-						if (VERBOSE2)
-							fprintf(stderr,"Found 0 in chip sequence\n"),fflush(stderr);
+						V2("Found 0 in chip sequence");
 						// we found a 0 in the chip sequence
 						d_preamble_cnt+=1;
-						//fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
+						//fprintf(stderr, "Threshold %d d_preamble_cnt: %d", threshold, d_preamble_cnt);
 					}
 				} else {
 					// we found the first 0, thus we only have to do the calculation every 32 chips
@@ -215,19 +235,16 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 
 						if(d_packet_byte == 0) {
 							if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[0] & 0xFFFFFFFE)) <= d_threshold) {
-								if (VERBOSE2)
-									fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);
+								V2("Found %d 0 in chip sequence", d_preamble_cnt);
 								// we found an other 0 in the chip sequence
 								d_packet_byte = 0;
 								d_preamble_cnt ++;
 							} else if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[7] & 0xFFFFFFFE)) <= d_threshold) {
-								if (VERBOSE2)
-									fprintf(stderr,"Found first SFD\n"),fflush(stderr);
+								V2("Found first SFD");
 								d_packet_byte = 7 << 4;
 							} else {
 								// we are not in the synchronization header
-								if (VERBOSE2)
-									fprintf(stderr, "Wrong first byte of SFD. %u\n", d_shift_reg), fflush(stderr);
+								V2("Wrong first byte of SFD. 0x%08x", d_shift_reg);
 								enter_search();
 								break;
 							}
@@ -235,15 +252,13 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 						} else {
 							if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[10] & 0xFFFFFFFE)) <= d_threshold) {
 								d_packet_byte |= 0xA;
-								if (VERBOSE2)
-									fprintf(stderr,"Found sync, 0x%x\n", d_packet_byte),fflush(stderr);
+								V2("Found sync, 0x%x", d_packet_byte);
 								// found SDF
 								// setup for header decode
 								enter_have_sync();
 								break;
 							} else {
-								if (VERBOSE)
-									fprintf(stderr, "Wrong second byte of SFD. %u\n", d_shift_reg), fflush(stderr);
+								V("Wrong second byte of SFD. %u", d_shift_reg);
 								enter_search();
 								break;
 							}
@@ -254,9 +269,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 			break;
 
 		case STATE_HAVE_SYNC:
-			if (VERBOSE2)
-				fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n", d_headerbitlen_cnt, d_header),
-				fflush(stderr);
+			V2("Header Search bitcnt=%d, header=0x%08x", d_headerbitlen_cnt, d_header);
 
 			while (count < ninput) {		// Decode the bytes one after another.
 				if(slice(inbuf[count++]))
@@ -271,8 +284,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 					unsigned char c = decode_chips(d_shift_reg);
 					if(c == 0xFF){
 						// something is wrong. restart the search for a sync
-						if(VERBOSE2)
-							fprintf(stderr, "Found a not valid chip sequence! %u\n", d_shift_reg), fflush(stderr);
+						V2("Found a not valid chip sequence! 0x%08x", d_shift_reg);
 
 						enter_search();
 						break;
@@ -300,8 +312,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 			break;
 
 		case STATE_HAVE_HEADER:
-			if (VERBOSE2)
-				fprintf(stderr,"Packet Build count=%d, ninput=%d, packet_len=%d\n", count, ninput, d_packetlen),fflush(stderr);
+			V2("Packet Build count=%d, ninput=%d, packet_len=%d", count, ninput, d_packetlen);
 
 			while (count < ninput) {   // shift bits into bytes of packet one at a time
 				if(slice(inbuf[count++]))
@@ -315,8 +326,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 					unsigned char c = decode_chips(d_shift_reg);
 					if(c == 0xff){
 						// something is wrong. restart the search for a sync
-						if(VERBOSE2)
-							fprintf(stderr, "Found a not valid chip sequence! %u\n", d_shift_reg), fflush(stderr);
+						V2("Found a not valid chip sequence! %u", d_shift_reg);
 
 						enter_search();
 						break;
@@ -328,12 +338,11 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 						// c is always < 15
 						d_packet_byte |= c << 4;
 					}
-					//fprintf(stderr, "%d: 0x%x\n", d_packet_byte_index, c);
+					//fprintf(stderr, "%d: 0x%x", d_packet_byte_index, c);
 					d_packet_byte_index = d_packet_byte_index + 1;
 					if(d_packet_byte_index%2 == 0){
 						// we have a complete byte
-						if (VERBOSE2)
-							fprintf(stderr, "packetcnt: %d, payloadcnt: %d, payload 0x%x, d_packet_byte_index: %d\n", d_packetlen_cnt, d_payload_cnt, d_packet_byte, d_packet_byte_index), fflush(stderr);
+						V2("packetcnt: %d, payloadcnt: %d, payload 0x%x, d_packet_byte_index: %d", d_packetlen_cnt, d_payload_cnt, d_packet_byte, d_packet_byte_index);
 
 						d_packet[d_packetlen_cnt++] = d_packet_byte;
 						d_payload_cnt++;
@@ -351,8 +360,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 
 							message_port_pub(pmt::mp("out"), pmt::cons(meta, payload));
 
-							if(VERBOSE2)
-								fprintf(stderr, "Adding message of size %d to queue\n", d_packetlen_cnt);
+							V2("Adding message of size %d to queue", d_packetlen_cnt);
 							enter_search();
 							break;
 						}
@@ -368,10 +376,9 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 		}
 	}
 
-	if(VERBOSE2)
-		fprintf(stderr, "Samples Processed: %d\n", ninput_items[0]), fflush(stderr);
+	V2("Samples Processed: %d", ninput_items[0]);
 
-        consume(0, ninput_items[0]);
+    consume(0, ninput_items[0]);
 
 	return 0;
 }
