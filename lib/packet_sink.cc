@@ -28,35 +28,58 @@
 
 using namespace gr::ieee802154;
 
-// very verbose output for almost each sample
-#define VERBOSE 0
-// less verbose output for higher level debugging
-#define VERBOSE2 0
+#include <sys/time.h>
 
-// this is the mapping between chips and symbols if we do
-// a fm demodulation of the O-QPSK signal. Note that this
-// is different than the O-QPSK chip sequence from the
-// 802.15.4 standard since there there is a translation
-// happening.
-// See "CMOS RFIC Architectures for IEEE 802.15.4 Networks",
-// John Notor, Anthony Caviglia, Gary Levy, for more details.
+static inline uint64_t stamp() {
+	struct timeval tv = {};
+	gettimeofday( &tv, NULL );
+	return tv.tv_sec;
+}
+static uint64_t then, now;
+
+#define V_( fmt, args... ) \
+    do { \
+    	now = stamp(); \
+        if( d_debug && now - then >= 1 ) { \
+        	then = now; \
+            fprintf( stderr, fmt "\n", ##args ); \
+            fflush( stderr ); \
+        } \
+    } while ( 0 )
+
+#if 0
+#define V1( fmt, args... ) V_( fmt, ##args )
+#else
+#define V1( fmt, args... )
+#endif
+#if 1
+#define V2( fmt, args... ) V_( fmt, ##args )
+#else
+#define V2( fmt, args... )
+#endif
+
+#define D( fmt, args... ) V_( fmt, ##args )
+
+#define SFD_FRST ( d_sync_vector & 0xf )
+#define SFD_LAST ( (d_sync_vector >> 4) & 0xf )
+
 static const unsigned int CHIP_MAPPING[] = {
-	0x744ac39b,
-	0x44ac39b7,
-	0x4ac39b74,
-	0xac39b744,
-	0xc39b744a,
-	0x39b744ac,
-	0x9b744ac3,
-	0xb744ac39,
-	0xdee06931,
-	0xee06931d,
-	0xe06931de,
-	0x06931dee,
-	0x6931dee0,
-	0x931dee06,
-	0x31dee069,
-	0x1dee0693,
+	0xd9c3522e,
+	0xed9c3522,
+	0x2ed9c352,
+	0x22ed9c35,
+	0x522ed9c3,
+	0x3522ed9c,
+	0xc3522ed9,
+	0x9c3522ed,
+	0x8c96077b,
+	0xb8c96077,
+	0x7b8c9607,
+	0x77b8c960,
+	0x077b8c96,
+	0x6077b8c9,
+	0x96077b8c,
+	0xc96077b8,
 };
 
 static const int MAX_PKT_LEN    = 128 -  1; // remove header and CRC
@@ -67,8 +90,7 @@ public:
 
 void enter_search()
 {
-	if (VERBOSE)
-		fprintf(stderr, "@ enter_search\n");
+	V1("@ enter_search");
 
 	d_state = STATE_SYNC_SEARCH;
 	d_shift_reg = 0;
@@ -79,8 +101,7 @@ void enter_search()
     
 void enter_have_sync()
 {
-	if (VERBOSE)
-		fprintf(stderr, "@ enter_have_sync\n");
+	V1("@ enter_have_sync");
 
 	d_state = STATE_HAVE_SYNC;
 	d_packetlen_cnt = 0;
@@ -94,8 +115,7 @@ void enter_have_sync()
 
 void enter_have_header(int payload_len)
 {
-	if (VERBOSE)
-		fprintf(stderr, "@ enter_have_header (payload_len = %d)\n", payload_len);
+	D("@ enter_have_header (payload_len = %d)", payload_len);
 
 	d_state = STATE_HAVE_HEADER;
 	d_packetlen  = payload_len;
@@ -122,8 +142,7 @@ unsigned char decode_chips(unsigned int chips){
 	}
 
 	if (min_threshold < d_threshold) {
-		if (VERBOSE)
-			fprintf(stderr, "Found sequence with %d errors at 0x%x\n", min_threshold, (chips & 0x7FFFFFFE) ^ (CHIP_MAPPING[best_match] & 0x7FFFFFFE)), fflush(stderr);
+		D("[ %2u ] 0x%08x => 0x%08x [ %2u errors ]", best_match, chips, CHIP_MAPPING[ best_match ], min_threshold );
 		// LQI: Average number of chips correct * MAX_LQI_SAMPLES
 		//
 		if (d_lqi_sample_count < MAX_LQI_SAMPLES) {
@@ -141,20 +160,20 @@ int slice(float x) {
 	return x > 0 ? 1 : 0;
 }
 
-packet_sink_impl(int threshold)
+packet_sink_impl(int threshold, bool debug)
   : block ("packet_sink",
 		   gr::io_signature::make(1, 1, sizeof(float)),
 		   gr::io_signature::make(0, 0, 0)),
-    d_threshold(threshold)
+    d_threshold(threshold),
+	d_debug(debug)
 {
-	d_sync_vector = 0xA7;
+	d_sync_vector = 0xa7;
 
 	// Link Quality Information
 	d_lqi = 0;
 	d_lqi_sample_count = 0;
 
-	if ( VERBOSE )
-		fprintf(stderr, "syncvec: %x, threshold: %d\n", d_sync_vector, d_threshold),fflush(stderr);
+	V1("syncvec: %x, threshold: %d", d_sync_vector, d_threshold);
 	enter_search();
 
 	message_port_register_out(pmt::mp("out"));
@@ -174,22 +193,20 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 	int count=0;
 	int i = 0;
 
-	if (VERBOSE)
-		fprintf(stderr,">>> Entering state machine\n"),fflush(stderr);
+	V1(">>> Entering state machine");
 
 	while(count < ninput) {
 		switch(d_state) {
 
 		case STATE_SYNC_SEARCH:    // Look for sync vector
-			if (VERBOSE)
-				fprintf(stderr,"SYNC Search, ninput=%d syncvec=%x\n", ninput, d_sync_vector),fflush(stderr);
+			V1("SYNC Search, ninput=%d syncvec=%x", ninput, d_sync_vector);
 
 			while (count < ninput) {
 
 				if(slice(inbuf[count++]))
-					d_shift_reg = (1 << 31) | (d_shift_reg >> 1);
+					d_shift_reg = (d_shift_reg << 1) | 1;
 				else
-					d_shift_reg = d_shift_reg >> 1;
+					d_shift_reg = d_shift_reg << 1;
 
 				if(d_preamble_cnt > 0){
 					d_chip_cnt = d_chip_cnt+1;
@@ -200,13 +217,12 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 					unsigned int threshold;
 					threshold = gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[0] & 0x7FFFFFFE));
 					if(threshold < d_threshold) {
-						//  fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
+						//  fprintf(stderr, "Threshold %d d_preamble_cnt: %d", threshold, d_preamble_cnt);
 						//if ((d_shift_reg&0xFFFFFE) == (CHIP_MAPPING[0]&0xFFFFFE)) {
-						if (VERBOSE2)
-							fprintf(stderr,"Found 0 in chip sequence\n"),fflush(stderr);
+						V1("Found 0 in chip sequence");
 						// we found a 0 in the chip sequence
 						d_preamble_cnt+=1;
-						//fprintf(stderr, "Threshold %d d_preamble_cnt: %d\n", threshold, d_preamble_cnt);
+						//fprintf(stderr, "Threshold %d d_preamble_cnt: %d", threshold, d_preamble_cnt);
 					}
 				} else {
 					// we found the first 0, thus we only have to do the calculation every 32 chips
@@ -215,35 +231,30 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 
 						if(d_packet_byte == 0) {
 							if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[0] & 0xFFFFFFFE)) <= d_threshold) {
-								if (VERBOSE2)
-									fprintf(stderr,"Found %d 0 in chip sequence\n", d_preamble_cnt),fflush(stderr);
+								V2("Found %d 0 in chip sequence", d_preamble_cnt);
 								// we found an other 0 in the chip sequence
 								d_packet_byte = 0;
 								d_preamble_cnt ++;
-							} else if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[7] & 0xFFFFFFFE)) <= d_threshold) {
-								if (VERBOSE2)
-									fprintf(stderr,"Found first SFD\n"),fflush(stderr);
-								d_packet_byte = 7 << 4;
+							} else if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[ SFD_FRST ] & 0xFFFFFFFE)) <= d_threshold) {
+								V2("Found first nibble of SFD. 0x%08x", d_shift_reg);
+								d_packet_byte = SFD_FRST;
 							} else {
 								// we are not in the synchronization header
-								if (VERBOSE2)
-									fprintf(stderr, "Wrong first byte of SFD. %u\n", d_shift_reg), fflush(stderr);
+								V2("Wrong first nibble of SFD. 0x%08x", d_shift_reg);
 								enter_search();
 								break;
 							}
 
 						} else {
-							if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[10] & 0xFFFFFFFE)) <= d_threshold) {
-								d_packet_byte |= 0xA;
-								if (VERBOSE2)
-									fprintf(stderr,"Found sync, 0x%x\n", d_packet_byte),fflush(stderr);
+							if (gr::blocks::count_bits32((d_shift_reg & 0x7FFFFFFE) ^ (CHIP_MAPPING[ SFD_LAST ] & 0xFFFFFFFE)) <= d_threshold) {
+								d_packet_byte |= SFD_LAST << 4;
+								V2("Found sync, 0x%08x", d_packet_byte);
 								// found SDF
 								// setup for header decode
 								enter_have_sync();
 								break;
 							} else {
-								if (VERBOSE)
-									fprintf(stderr, "Wrong second byte of SFD. %u\n", d_shift_reg), fflush(stderr);
+								V2("Found second nibble of SFD. 0x%08x", d_shift_reg);
 								enter_search();
 								break;
 							}
@@ -254,15 +265,13 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 			break;
 
 		case STATE_HAVE_SYNC:
-			if (VERBOSE2)
-				fprintf(stderr,"Header Search bitcnt=%d, header=0x%08x\n", d_headerbitlen_cnt, d_header),
-				fflush(stderr);
+			V2("Header Search bitcnt=%d, header=0x%08x", d_headerbitlen_cnt, d_header);
 
 			while (count < ninput) {		// Decode the bytes one after another.
 				if(slice(inbuf[count++]))
-					d_shift_reg = (1<<31) | (d_shift_reg >> 1);
+					d_shift_reg = (d_shift_reg << 1) | 1;
 				else
-					d_shift_reg = d_shift_reg >> 1;
+					d_shift_reg = d_shift_reg << 1;
 
 				d_chip_cnt = d_chip_cnt+1;
 
@@ -271,8 +280,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 					unsigned char c = decode_chips(d_shift_reg);
 					if(c == 0xFF){
 						// something is wrong. restart the search for a sync
-						if(VERBOSE2)
-							fprintf(stderr, "Found a not valid chip sequence! %u\n", d_shift_reg), fflush(stderr);
+						V2("Found a not valid chip sequence! %u", d_shift_reg);
 
 						enter_search();
 						break;
@@ -300,14 +308,13 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 			break;
 
 		case STATE_HAVE_HEADER:
-			if (VERBOSE2)
-				fprintf(stderr,"Packet Build count=%d, ninput=%d, packet_len=%d\n", count, ninput, d_packetlen),fflush(stderr);
+			V2("Packet Build count=%d, ninput=%d, packet_len=%d", count, ninput, d_packetlen);
 
 			while (count < ninput) {   // shift bits into bytes of packet one at a time
 				if(slice(inbuf[count++]))
-					d_shift_reg = (1<<31) | (d_shift_reg >> 1);
+					d_shift_reg = (d_shift_reg << 1) | 1;
 				else
-					d_shift_reg = d_shift_reg >> 1;
+					d_shift_reg = d_shift_reg << 1;
 
 				d_chip_cnt = (d_chip_cnt+1)%32;
 
@@ -315,8 +322,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 					unsigned char c = decode_chips(d_shift_reg);
 					if(c == 0xff){
 						// something is wrong. restart the search for a sync
-						if(VERBOSE2)
-							fprintf(stderr, "Found a not valid chip sequence! %u\n", d_shift_reg), fflush(stderr);
+						V2("Found a not valid chip sequence! %u", d_shift_reg);
 
 						enter_search();
 						break;
@@ -328,12 +334,11 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 						// c is always < 15
 						d_packet_byte |= c << 4;
 					}
-					//fprintf(stderr, "%d: 0x%x\n", d_packet_byte_index, c);
+					//fprintf(stderr, "%d: 0x%x", d_packet_byte_index, c);
 					d_packet_byte_index = d_packet_byte_index + 1;
 					if(d_packet_byte_index%2 == 0){
 						// we have a complete byte
-						if (VERBOSE2)
-							fprintf(stderr, "packetcnt: %d, payloadcnt: %d, payload 0x%x, d_packet_byte_index: %d\n", d_packetlen_cnt, d_payload_cnt, d_packet_byte, d_packet_byte_index), fflush(stderr);
+						V2("packetcnt: %d, payloadcnt: %d, payload 0x%x, d_packet_byte_index: %d", d_packetlen_cnt, d_payload_cnt, d_packet_byte, d_packet_byte_index);
 
 						d_packet[d_packetlen_cnt++] = d_packet_byte;
 						d_payload_cnt++;
@@ -346,13 +351,12 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 							pmt::pmt_t meta = pmt::make_dict();
 							meta = pmt::dict_add(meta, pmt::mp("lqi"), pmt::from_long(lqi));
 
-							std::memcpy(buf, d_packet, d_packetlen_cnt);
-							pmt::pmt_t payload = pmt::make_blob(buf, d_packetlen_cnt);
+							//std::memcpy(buf, d_packet, d_packetlen_cnt);
+							pmt::pmt_t payload = pmt::make_blob( d_packet, d_packetlen_cnt );
 
 							message_port_pub(pmt::mp("out"), pmt::cons(meta, payload));
 
-							if(VERBOSE2)
-								fprintf(stderr, "Adding message of size %d to queue\n", d_packetlen_cnt);
+							D("Adding message of size %d to queue", d_packetlen_cnt);
 							enter_search();
 							break;
 						}
@@ -368,10 +372,9 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 		}
 	}
 
-	if(VERBOSE2)
-		fprintf(stderr, "Samples Processed: %d\n", ninput_items[0]), fflush(stderr);
+	V1("Samples Processed: %d", ninput_items[0]);
 
-        consume(0, ninput_items[0]);
+    consume(0, ninput_items[0]);
 
 	return 0;
 }
@@ -379,6 +382,7 @@ int general_work(int noutput, gr_vector_int& ninput_items,
 private:
 	enum {STATE_SYNC_SEARCH, STATE_HAVE_SYNC, STATE_HAVE_HEADER} d_state;
 
+	bool              d_debug;
 	unsigned int      d_sync_vector;           // 802.15.4 standard is 4x 0 bytes and 1x0xA7
 	unsigned int      d_threshold;             // how many bits may be wrong in sync vector
 
@@ -403,6 +407,6 @@ private:
 	char buf[256];
 };
 
-packet_sink::sptr packet_sink::make(unsigned int threshold) {
-	return gnuradio::get_initial_sptr(new packet_sink_impl(threshold));
+packet_sink::sptr packet_sink::make(unsigned int threshold, bool debug) {
+	return gnuradio::get_initial_sptr(new packet_sink_impl(threshold,debug));
 }
